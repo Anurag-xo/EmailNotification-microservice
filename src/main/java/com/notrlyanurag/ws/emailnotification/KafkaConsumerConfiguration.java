@@ -23,7 +23,7 @@ public class KafkaConsumerConfiguration {
     Map<String, Object> config = new HashMap<>();
     config.put(
         ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-        environment.getProperty("spring.kafka.bootstrap-servers"));
+        environment.getProperty("spring.kafka.consumer.bootstrap-servers"));
     config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
     config.put(
