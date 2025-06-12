@@ -2,5 +2,4 @@
 
 A kafka project
 a simple yet robust microservice
-need to deploy in full scale.
-need to add something
+taking a break coz of exams:(
