@@ -2,5 +2,4 @@
 
 A kafka project
 a simple yet robust microservice
-taking a break coz of exams:(
-well well well
+updating after 21
