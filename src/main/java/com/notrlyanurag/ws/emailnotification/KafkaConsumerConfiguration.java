@@ -54,6 +54,7 @@ public class KafkaConsumerConfiguration {
 
     DefaultErrorHandler errorHandler =
         new DefaultErrorHandler(new DeadLetterPublishingRecoverer(kafkaTemplate));
+    errorHandler.addNotRetryableExceptions(NotRetryableException.class);
 
     ConcurrentKafkaListenerContainerFactory<String, Object> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
