@@ -21,6 +21,7 @@ import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration
 public class KafkaConsumerConfiguration {
@@ -53,8 +54,10 @@ public class KafkaConsumerConfiguration {
       KafkaTemplate<String, Object> kafkaTemplate) {
 
     DefaultErrorHandler errorHandler =
-        new DefaultErrorHandler(new DeadLetterPublishingRecoverer(kafkaTemplate));
+        new DefaultErrorHandler(
+            new DeadLetterPublishingRecoverer(kafkaTemplate), new FixedBackOff(5000, 3));
     errorHandler.addNotRetryableExceptions(NotRetryableException.class);
+    errorHandler.addRetryableExceptions(RetryableException.class);
 
     ConcurrentKafkaListenerContainerFactory<String, Object> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
