@@ -1,8 +1,10 @@
 package com.notrlyanurag.ws.emailnotification;
 
 import com.notrlyanurag.ws.core.ProductCreatedEvent;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +24,14 @@ public class ProductCreatedEventHandler {
 
   private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
   private RestTemplate restTemplate;
+  private ProcessedEventRepository processedEventRepository;
 
   public ProductCreatedEventHandler(RestTemplate restTemplate) {
     this.restTemplate = restTemplate;
   }
 
   // Reading a unique message header id using @Header
+  @Transactional
   @KafkaHandler
   public void handle(
       @Payload ProductCreatedEvent productCreatedEvent,
@@ -56,6 +60,13 @@ public class ProductCreatedEventHandler {
       throw new NotRetryableException(ex);
     } catch (Exception ex) {
       LOGGER.error(ex.getMessage());
+      throw new NotRetryableException(ex);
+    }
+    // Save a unique message id in a database table
+    try {
+      processedEventRepository.save(
+          new ProcessedEventEntity(messageId, productCreatedEvent.getProductId()));
+    } catch (DataIntegrityViolationException ex) {
       throw new NotRetryableException(ex);
     }
   }
