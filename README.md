@@ -8,6 +8,7 @@ This microservice is a Spring Boot application that listens for events from a Ka
 - **Event-Driven:** Reacts to `ProductCreatedEvent` messages.
 - **Resilient:** Implements retry logic for transient errors and a dead-letter topic for persistent errors.
 - **REST Communication:** Interacts with other services via REST APIs.
+- **Idempotent Consumer:** Ensures that duplicate messages are not processed, making the service more robust.
 
 ## Prerequisites
 
