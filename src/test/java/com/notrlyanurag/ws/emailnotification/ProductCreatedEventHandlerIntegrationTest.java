@@ -6,13 +6,24 @@ import java.util.UUID;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.client.RestTemplate;
 
 @EmbeddedKafka
 @SpringBootTest(
     properties = "spring.kafka.consumer.bootstrap-servers=${spring.embedded.kafka.brokers}")
 public class ProductCreatedEventHandlerIntegrationTest {
+
+  @MockitoBean ProcessedEventRepository processedEventRepository;
+
+  @MockitoBean RestTemplate restTemplate;
 
   @Test
   public void testProductCreatedEventHandler_OnProductCreated_HandlesEvent() {
@@ -31,6 +42,20 @@ public class ProductCreatedEventHandlerIntegrationTest {
 
     record.headers().add("messageId", messageId.getBytes());
     record.headers().add(KafkaHeaders.RECEIVED_KEY, messageKey.getBytes());
+
+    ProcessedEventEntity processedEventEntity = new ProcessedEventEntity();
+    when(ProcessedEventRepository.findByMessageId(anyString())).thenReturn(processedEventEntity);
+    when(ProcessedEventRepository.save(any(ProcessedEventEntity.class))).thenReturn(null);
+
+    String responseBody = "{\"key\":\"value\"}";
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    ResponseEntity<String> responseEntity =
+        new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
+
+    when(RestTemplate.exchange(
+            any(String.class), any(HttpMethod.class), isNull(), eq(String.class)))
+        .thenReturn(responseEntity);
 
     // Act
 
