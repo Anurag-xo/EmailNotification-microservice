@@ -1,16 +1,22 @@
 package com.notrlyanurag.ws.emailnotification;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.notrlyanurag.ws.core.ProductCreatedEvent;
 import java.math.BigDecimal;
 import java.util.UUID;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -25,8 +31,12 @@ public class ProductCreatedEventHandlerIntegrationTest {
 
   @MockitoBean RestTemplate restTemplate;
 
+  @Autowired KafkaTemplate<String, Object> kafkaTemplate;
+
+  @SpyBean ProductCreatedEventHandler productCreatedEventHandler;
+
   @Test
-  public void testProductCreatedEventHandler_OnProductCreated_HandlesEvent() {
+  public void testProductCreatedEventHandler_OnProductCreated_HandlesEvent() throws Exception {
     // Arrange
     ProductCreatedEvent productCreatedEvent = new ProductCreatedEvent();
     productCreatedEvent.setPrice(new BigDecimal(10));
@@ -37,7 +47,7 @@ public class ProductCreatedEventHandlerIntegrationTest {
     String messageId = UUID.randomUUID().toString();
     String messageKey = productCreatedEvent.getProductId();
 
-    ProducerRecord<String, ProductCreatedEvent> record =
+    ProducerRecord<String, Object> record =
         new ProducerRecord<>("products-created-events-topic", messageKey, productCreatedEvent);
 
     record.headers().add("messageId", messageId.getBytes());
@@ -59,6 +69,26 @@ public class ProductCreatedEventHandlerIntegrationTest {
 
     // Act
 
+    kafkaTemplate.send(record).get();
     // Assert
+
+    ArgumentCaptor<String> messageIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> messageKeyCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<ProductCreatedEvent> eventCaptor =
+        ArgumentCaptor.forClass(ProductCreatedEvent.class);
+
+    verify(
+        productCreatedEventHandler,
+        timeout(5000)
+            .times(1)
+            .handler(
+                eventCaptor.capture(),
+                messageIdCaptor.capture(),
+                messageIdCaptor.capture(),
+                messageKeyCaptor.capture()));
+
+    assertEquals(messageId, messageIdCaptor.getValue());
+    assertEquals(messageKey, messageKeyCaptor.getValue());
+    assertEquals(productCreatedEvent.getProductId(), eventCaptor.getValue().getProductId());
   }
 }
