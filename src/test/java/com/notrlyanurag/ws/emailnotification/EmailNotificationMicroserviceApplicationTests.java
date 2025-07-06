@@ -10,7 +10,5 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 class EmailNotificationMicroserviceApplicationTests {
 
   @Test
-  void contextLoads() {
-    // This test only verifies that the Spring context loads successfully
-  }
+  void contextLoads() {}
 }

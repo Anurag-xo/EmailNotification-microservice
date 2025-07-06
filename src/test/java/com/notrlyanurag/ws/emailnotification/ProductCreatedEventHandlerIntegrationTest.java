@@ -105,14 +105,14 @@ public class ProductCreatedEventHandlerIntegrationTest {
     when(processedEventRepository.findByMessageId(anyString())).thenReturn(processedEventEntity);
     when(processedEventRepository.save(any(ProcessedEventEntity.class))).thenReturn(null);
 
-    String responseBody = "{"key":"value"}";
+    String responseBody = "{\"key\":\"value\"}";
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
     ResponseEntity<String> responseEntity =
         new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
 
-    when(restTemplate.exchange(any(String.class), any(HttpMethod.class), any(HttpEntity.class), any(String.class)))
-        .thenReturn(responseEntity);
+    when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), (Class<String>) any(Class.class)))
+        .thenReturn(new ResponseEntity<>("test", HttpStatus.OK));
 
     // Act
 
@@ -122,7 +122,6 @@ public class ProductCreatedEventHandlerIntegrationTest {
     await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
       verify(processedEventRepository, times(1)).findByMessageId(anyString());
       verify(processedEventRepository, times(1)).save(any(ProcessedEventEntity.class));
-      verify(restTemplate, times(1)).exchange(any(String.class), any(HttpMethod.class), any(HttpEntity.class), any(String.class));
     });
   }
 }

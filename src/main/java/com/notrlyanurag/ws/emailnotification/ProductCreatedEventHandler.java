@@ -26,8 +26,9 @@ public class ProductCreatedEventHandler {
   private RestTemplate restTemplate;
   private ProcessedEventRepository processedEventRepository;
 
-  public ProductCreatedEventHandler(RestTemplate restTemplate) {
+  public ProductCreatedEventHandler(RestTemplate restTemplate, ProcessedEventRepository processedEventRepository) {
     this.restTemplate = restTemplate;
+    this.processedEventRepository = processedEventRepository;
   }
 
   // Reading a unique message header id using @Header
